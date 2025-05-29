@@ -1,6 +1,10 @@
 import org.mongodb.scala._
 import org.mongodb.scala.bson.{BsonString, BsonInt32, BsonDouble, BsonInt64,BsonValue}
 import java.time.Instant
+import java.time.ZonedDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
 import scala.io.{Source, StdIn}
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -52,10 +56,13 @@ object SmartFarmingApp {
 
   def insertReading(soilMoisture: Double, temperature: Double, air_humidity: Double,
                     ph: Double, rainfall: Double, n: Int, p: Int, k: Int): Unit = {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+  val timestampStr = ZonedDateTime.now(ZoneId.systemDefault()).format(formatter)
+
     val reading = org.mongodb.scala.Document(
       "soil_moisture" -> soilMoisture,
       "temperature" -> temperature,
-      "timestamp" -> Instant.now().toString,
+      "timestamp" -> timestampStr,
       "air_humidity" -> air_humidity,
       "ph" -> ph,
       "rainfall" -> rainfall,
