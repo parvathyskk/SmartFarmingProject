@@ -5,6 +5,7 @@ import scala.io.{Source, StdIn}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.mongodb.scala.model.Filters.equal
 
 object SmartFarmingApp {
 
@@ -119,9 +120,9 @@ object SmartFarmingApp {
         val p = getDoubleField(doc, "P").getOrElse(-1.0).toInt
         val k = getDoubleField(doc, "K").getOrElse(-1.0).toInt
 
-        println("\n** Latest Reading **")
+        println("\n** LATEST READING **\n")
         println(f"   Soil Moisture: $moisture%.2f%%")
-        println(f"   Temperature: $temp%.2f °C")
+        println(f"   Temperature: $temp%.2f Cel")
         println(s"   Time: $timestamp")
         println(f"   Air Humidity: $airHumidity%.2f%%")
         println(f"   pH Level: $ph%.2f")
@@ -149,12 +150,96 @@ object SmartFarmingApp {
     }
   }
 
+  // READ: Print all sensor data
+def readAllData(): Unit = {
+  val futureDocs = collection.find().toFuture()
+  val documents = Await.result(futureDocs, 10.seconds)
+
+  if (documents.isEmpty) {
+    println("No sensor data found.")
+  } else {
+    println("\n** All Sensor Records **")
+    documents.foreach { doc =>
+      println(doc.toJson())
+    }
+  }
+}
+
+// UPDATE: Update specific fields of a record by timestamp
+def update(timestamp: String): Unit = {
+  println("\nWhich field do you want to update?\n")
+  println("1. Soil Moisture\n2. Temperature\n3. Air Humidity\n4. pH\n5. Rainfall\n" +
+    "6. Nitrogen (N)\n7. Phosphorus (P)\n8. Potassium (K)\nChoose an option (1-8): ")
+
+  val fieldChoice = StdIn.readLine().trim
+  val (fieldName, fieldTypeOpt) = fieldChoice match {
+    case "1" => ("soil_moisture", "double")
+    case "2" => ("temperature", "double")
+    case "3" => ("air_humidity", "double")
+    case "4" => ("ph", "double")
+    case "5" => ("rainfall", "double")
+    case "6" => ("N", "int")
+    case "7" => ("P", "int")
+    case "8" => ("K", "int")
+    case _ =>
+      println("Invalid option.")
+      return
+  }
+
+  print(s"Enter new value for $fieldName: ")
+  val newValueStr = StdIn.readLine().trim
+
+  val newValue: BsonValue = fieldTypeOpt match {
+    case "double" =>
+      try {
+        BsonDouble(newValueStr.toDouble)
+      } catch {
+        case _: NumberFormatException =>
+          println("Invalid input. Expected a decimal number.")
+          return
+      }
+    case "int" =>
+      try {
+        BsonInt32(newValueStr.toInt)
+      } catch {
+        case _: NumberFormatException =>
+          println("Invalid input. Expected an integer.")
+          return
+      }
+  }
+
+  val updateFuture = collection.updateOne(
+    equal("timestamp", timestamp),
+    org.mongodb.scala.model.Updates.set(fieldName, newValue)).toFuture()
+
+  val result = Await.result(updateFuture, 5.seconds)
+
+  if (result.getModifiedCount > 0)
+    println(s"Successfully updated $fieldName for timestamp $timestamp")
+  else
+    println(s"No document found with timestamp: $timestamp")
+}
+
+
+// DELETE: Delete a record by timestamp
+def delete(timestamp: String): Unit = {
+  val resultFuture = collection.deleteOne(org.mongodb.scala.Document("timestamp" -> timestamp)).toFuture()
+  val result = Await.result(resultFuture, 5.seconds)
+
+  if (result.getDeletedCount > 0) println("Record deleted successfully.")
+  else println("No matching document found to delete.")
+}
+
+
   def main(args: Array[String]): Unit = {
     try {
-      println("Smart Farming Options:")
+      println("** SAMRT FARMING OPTIONS: **\n")
       println("1. Manual Entry")
       println("2. Upload CSV")
-      print("Choose an option (1 or 2): ")
+      println("3. View All Sensor Data")
+      println("4. Update a Record by Timestamp")
+      println("5. Delete a Record by Timestamp")
+      print("Choose an option (1 to 5): ")
       val choice = StdIn.readLine()
 
       choice match {
@@ -162,7 +247,7 @@ object SmartFarmingApp {
           print("Enter Soil Moisture (%): ")
           val moisture = StdIn.readDouble()
 
-          print("Enter Temperature (°C): ")
+          print("Enter Temperature (Cel): ")
           val temperature = StdIn.readDouble()
 
           print("Enter Air Humidity (%): ")
@@ -190,6 +275,18 @@ object SmartFarmingApp {
           val csvPath = "TARP.csv"
           insertFromCSV(csvPath)
           checkWatering()
+        case "3" =>
+          readAllData()
+
+        case "4" =>
+          print("Enter timestamp of record to update: ")
+          val ts = StdIn.readLine().trim
+          update(ts)
+
+        case "5" =>
+          print("Enter timestamp of record to delete: ")
+          val ts = StdIn.readLine().trim
+          delete(ts)
 
         case _ =>
           println("Invalid option.")
