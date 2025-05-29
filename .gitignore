@@ -1,0 +1,13 @@
+# Metals Scala IDE files
+.metals/
+
+# SBT build files
+target/
+
+# IntelliJ or VSCode files (if you have them)
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
