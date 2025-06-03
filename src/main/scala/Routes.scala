@@ -87,22 +87,24 @@ object Routes {
       },
 
       // Delete by timestamp
-      path("delete") {
-        delete {
-          parameter("timestamp".as[String]) { ts =>
-            val success = SmartFarmingApp.deleteByTimestamp(ts)
+path("delete") {
+  delete {
+    parameter("timestamp".as[String]) { ts =>
+      val success = SmartFarmingApp.deleteByTimestamp(ts)
 
-            if (success) complete(StatusCodes.OK, "Deleted successfully")
-            else complete(StatusCodes.NotFound, "Timestamp not found")
-          }
-        }
-      }
+      if (success) complete(StatusCodes.OK, "Deleted successfully")
+      else complete(StatusCodes.NotFound, "Timestamp not found")
+    }
+  }
+},
 
-      path("predict-water") {
+// ✅ Fix: Add comma above this line
+path("predict_water") {
   get {
     val result = SmartFarmingApp.getAndPredict()
     complete(result)
   }
 }
+
     )
 }
