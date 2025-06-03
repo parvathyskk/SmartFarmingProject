@@ -192,3 +192,28 @@
       output.textContent = 'Error: ' + err.message;
     }
   });
+
+  document.getElementById("btnPredictWater")?.addEventListener("click", () => {
+    document
+      .querySelectorAll(".section")
+      .forEach((sec) => (sec.style.display = "none"));
+    document.getElementById("predictWaterOutput").style.display = "block";
+    output.textContent = "";
+  });
+
+  document
+    .getElementById("checkWaterBtn")
+    ?.addEventListener("click", async () => {
+      try {
+        const res = await fetch(`${apiBase}/predict_water`);
+        if (res.ok) {
+          const prediction = await res.text();
+          output.textContent = `Prediction Result:\n${prediction}`;
+        } else {
+          output.textContent = "Failed to get prediction.";
+        }
+      } catch (err) {
+        output.textContent = "Error: " + err.message;
+      }
+    });
+  

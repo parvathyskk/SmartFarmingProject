@@ -17,6 +17,8 @@
   <button data-section="viewAll">3. View All Sensor Data</button>
   <button data-section="updateRecord">4. Update a Record by Timestamp</button>
   <button data-section="deleteRecord">5. Delete a Record by Timestamp</button>
+  <button id="btnPredictWater">6. Check Water Status</button>
+
 </div>
 
 <!-- Manual Entry -->
@@ -65,6 +67,11 @@
     <label>Potassium (K): <input type="number" name="K" /></label>
     <button type="submit">Update Record</button>
   </form>
+  <div id="predictWaterOutput" class="section">
+    <h2>Water Status Prediction</h2>
+    <button id="checkWaterBtn">Check Now</button>
+  </div>
+  
 </div>
 
 <!-- Delete Record -->
