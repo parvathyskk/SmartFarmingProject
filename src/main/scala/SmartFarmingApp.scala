@@ -46,10 +46,41 @@ object SmartFarmingApp {
   }
 
   // Get the latest reading
+ 
+
+  // Get the latest reading
   def getLatestReading(): Option[Document] = {
     val future = collection.find().sort(Document("timestamp" -> -1)).first().headOption()
     Await.result(future, 5.seconds)
+  } 
+  def predict_water(): String = {
+    val future = collection.find()
+      .sort(Document("timestamp" -> -1))
+      .first()
+      .headOption()
+      
+    Await.result(future, 5.seconds) match {
+      case Some(doc) =>   
+        // Convert Document to JSON string
+        doc.toJson()
+        
+      case None => 
+        "{}" // Return empty JSON if no document found
+    }
   }
+
+
+  //converting scala ouput to python input 
+
+  def getAndPredict(): String = {
+  val jsonData = getLatestReadingForPython() // Your existing Scala function
+  
+  val command = Seq("python", "predict_handler.py")
+  val output = (command #< new ByteArrayInputStream(jsonData.getBytes)).!!
+  
+  output.trim
+  }
+
 
   // Get all sensor data
   def readAllDataAsList(): Seq[Document] = {
