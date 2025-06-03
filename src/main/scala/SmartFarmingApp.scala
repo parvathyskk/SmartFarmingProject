@@ -8,6 +8,10 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Updates.set
+import java.io.ByteArrayInputStream
+import scala.language.postfixOps
+import sys.process._
+
 
 object SmartFarmingApp {
 
@@ -73,7 +77,7 @@ object SmartFarmingApp {
   //converting scala ouput to python input 
 
   def getAndPredict(): String = {
-  val jsonData = getLatestReadingForPython() // Your existing Scala function
+  val jsonData = predict_water() // Your existing Scala function
   
   val command = Seq("python", "predict_handler.py")
   val output = (command #< new ByteArrayInputStream(jsonData.getBytes)).!!
