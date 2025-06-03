@@ -97,5 +97,12 @@ object Routes {
           }
         }
       }
+
+      path("predict-water") {
+  get {
+    val result = SmartFarmingApp.getAndPredict()
+    complete(result)
+  }
+}
     )
 }
