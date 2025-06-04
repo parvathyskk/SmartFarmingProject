@@ -193,28 +193,61 @@
     }
   });
 
-  document.getElementById("btnPredictWater")?.addEventListener("click", () => {
-    document
-      .querySelectorAll(".section")
-      .forEach((sec) => (sec.style.display = "none"));
-    document.getElementById("predictWaterOutput").style.display = "block";
-    output.textContent = "";
-  });
+  // document.getElementById("btnPredictWater")?.addEventListener("click", () => {
+  //   document
+  //     .querySelectorAll(".section")
+  //     .forEach((sec) => (sec.style.display = "none"));
+  //   document.getElementById("predictWaterOutput").style.display = "block";
+  //   output.textContent = "";
+  // });
 
-  document
-    .getElementById("checkWaterBtn")
-    ?.addEventListener("click", async () => {
-      try {
-        const res = await fetch(`${apiBase}/predict_water`);
-        if (res.ok) {
-          const prediction = await res.text();
-          output.textContent = `Prediction Result:\n${prediction}`;
-        } else {
-          output.textContent = "Failed to get prediction.";
-        }
-      } catch (err) {
-        output.textContent = "Error: " + err.message;
-      }
-    });
+  // Water Prediction Button Handler
+document.getElementById("checkWaterBtn").addEventListener("click", async () => {
+  const output = document.getElementById("predictionOutput");
+  output.innerHTML = "<p class='loading'>Loading prediction...</p>";
   
-  
+  try {
+    const response = await fetch('http://localhost:8080/api/predict_water');
+    
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    // Add null checks
+    if (!result || typeof result !== 'object') {
+      throw new Error("Invalid response format");
+    }
+
+    // Ensure required fields exist
+    const prediction = result.prediction || "UNKNOWN";
+    const reason = result.reason || "No reason provided";
+    const contributions = result.contributions || {};
+    
+    output.innerHTML = `
+      <div class="prediction-result">
+        <h3 style="color: ${prediction === "ON" ? 'green' : 'red'}">
+          Recommendation: ${prediction}
+        </h3>
+        <p><strong>Reason:</strong> ${reason}</p>
+        <div class="contributions">
+          ${Object.entries(contributions)
+            .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+            .slice(0, 3)
+            .map(([k, v]) => `
+              <div class="factor">
+                <span>${k}:</span>
+                <span style="color: ${v > 0 ? 'green' : 'red'}">
+                  ${v?.toFixed(4) || 'N/A'}
+                </span>
+              </div>`
+            ).join('')}
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error("Full error:", error);
+    output.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+  }
+});

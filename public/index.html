@@ -12,13 +12,12 @@
   
 
 <div id="menu">
-  <button data-section="manualEntry">1. Manual Entry</button>
+
   <button data-section="uploadCsv">2. Upload CSV</button>
   <button data-section="viewAll">3. View All Sensor Data</button>
   <button data-section="updateRecord">4. Update a Record by Timestamp</button>
   <button data-section="deleteRecord">5. Delete a Record by Timestamp</button>
-  <button data-section="btnPredictWater">6. Check Water Status</button>
-
+  <button data-section="predictWaterOutput">6. Check Water Status</button>
 </div>
 
 <!-- Manual Entry -->
@@ -83,9 +82,10 @@
 </div>
 
 <!-- Predict Water Status -->
-<div id="predictWaterOutput" class="section">
+<div id="predictWaterOutput" class="section" style="display:none">
   <h2>Water Status Prediction</h2>
   <button id="checkWaterBtn">Check Now</button>
+  <div id="predictionOutput"></div> <!-- Changed ID to be specific -->
 </div>
 
 <div id="output"></div>

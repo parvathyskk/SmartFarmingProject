@@ -49,7 +49,7 @@ object SmartFarmingApp {
     Await.result(insertFuture, 5.seconds)
   }
 
-  // Get the latest reading
+  
  
 
   // Get the latest reading
@@ -57,34 +57,37 @@ object SmartFarmingApp {
     val future = collection.find().sort(Document("timestamp" -> -1)).first().headOption()
     Await.result(future, 5.seconds)
   } 
+
+
+
   def predict_water(): String = {
+  try {
     val future = collection.find()
       .sort(Document("timestamp" -> -1))
       .first()
       .headOption()
-      
+    
     Await.result(future, 5.seconds) match {
-      case Some(doc) =>   
-        // Convert Document to JSON string
-        doc.toJson()
+      case Some(doc) =>
+        val jsonData = doc.toJson()
+        println(s"[DEBUG] Sending to Python:\n$jsonData")
+        
+        val command = Seq("python", "D:/smart_water/SmartFarmingProject/src/main/script/predict_handler.py")
+        val process = Process(command)
+        val output = (process #< new ByteArrayInputStream(jsonData.getBytes("UTF-8"))).!!
+        println(s"[DEBUG] Python output:\n$output")
+        output
         
       case None => 
-        "{}" // Return empty JSON if no document found
+        """{"error": "No data found"}"""
     }
+  } catch {
+    case e: Exception =>
+      println(s"[ERROR] Prediction failed: ${e.getMessage}")
+      e.printStackTrace()
+      """{"error": "Prediction processing failed"}"""
   }
-
-
-  //converting scala ouput to python input 
-
-  def getAndPredict(): String = {
-  val jsonData = predict_water() // Your existing Scala function
-  
-  val command = Seq("python", "predict_handler.py")
-  val output = (command #< new ByteArrayInputStream(jsonData.getBytes)).!!
-  
-  output.trim
-  }
-
+}
 
   // Get all sensor data
   def readAllDataAsList(): Seq[Document] = {
