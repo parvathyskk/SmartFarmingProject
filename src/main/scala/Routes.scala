@@ -8,6 +8,13 @@ import org.mongodb.scala.bson.{BsonValue, BsonDouble, BsonInt32}
 import org.mongodb.scala.Document
 import SmartFarmingApp._
 import akka.http.scaladsl.model.headers._
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import akka.http.scaladsl.server.Directives.onComplete
+import scala.util.{Success, Failure}
+import io.circe.Json
+import io.circe.parser._
+import io.circe.syntax._
 
 object Routes {
 
@@ -98,20 +105,33 @@ object Routes {
           }
         },
         
-        pathPrefix("api") {
-          path("predict_water") {
-            get {
-              complete {
-                try {
-                  SmartFarmingApp.predict_water()
-                } catch {
-                  case e: Exception =>
-                    StatusCodes.InternalServerError -> s"Prediction failed: ${e.getMessage}"
-                }
-              }
-            }
+       pathPrefix("api") {
+  path("predict_water") {
+    get {
+      complete {
+        try {
+          val jsonStr = SmartFarmingApp.predict_water()
+          parse(jsonStr) match {
+            case Right(json) => json
+            case Left(err) =>
+              StatusCodes.InternalServerError -> Json.obj(
+                "error" -> Json.fromString("Invalid JSON from Python"),
+                "details" -> Json.fromString(err.getMessage)
+              )
           }
+        } catch {
+          case e: Exception =>
+            e.printStackTrace()
+            StatusCodes.InternalServerError -> Json.obj(
+              "error" -> Json.fromString(e.getMessage),
+              "type"  -> Json.fromString("prediction_failed")
+            )
         }
+      }
+    }
+  }
+}
+
       )
     }
 }

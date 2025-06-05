@@ -209,16 +209,20 @@ document.getElementById("checkWaterBtn").addEventListener("click", async () => {
   try {
     const response = await fetch('http://localhost:8080/api/predict_water');
     
+     
     if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
+      throw new Error(`Server error: ${response.status}`);
     }
-    
-    const result = await response.json();
-    
-    // Add null checks
-    if (!result || typeof result !== 'object') {
+
+    let result;
+    try {
+      result = await response.json(); // this line is failing
+    } catch (e) {
+      const text = await response.text();
+      console.error("Full raw response:", text);
       throw new Error("Invalid response format");
     }
+
 
     // Ensure required fields exist
     const prediction = result.prediction || "UNKNOWN";

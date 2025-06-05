@@ -9,6 +9,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream" % "2.6.20",
   "de.heikoseeberger" %% "akka-http-circe" % "1.39.2", // for JSON support
   "io.circe" %% "circe-generic" % "0.14.3",
-  "org.mongodb.scala" %% "mongo-scala-driver" % "4.10.0"
+  "org.mongodb.scala" %% "mongo-scala-driver" % "4.10.0",
+  "io.spray" %% "spray-json" % "1.3.6" // Explicit spray-json
 )
 

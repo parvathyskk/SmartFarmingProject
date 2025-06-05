@@ -113,3 +113,8 @@ object SmartFarmingApp {
     result.getDeletedCount > 0
   }
 }
+
+
+
+
+
