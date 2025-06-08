@@ -205,30 +205,35 @@
 document.getElementById("checkWaterBtn").addEventListener("click", async () => {
   const output = document.getElementById("predictionOutput");
   output.innerHTML = "<p class='loading'>Loading prediction...</p>";
-  
+
   try {
     const response = await fetch('http://localhost:8080/api/predict_water');
-    
-     
+
     if (!response.ok) {
       throw new Error(`Server error: ${response.status}`);
     }
 
-    let result;
-    try {
-      result = await response.json(); // this line is failing
-    } catch (e) {
-      const text = await response.text();
-      console.error("Full raw response:", text);
-      throw new Error("Invalid response format");
+    let rawText = await response.text();
+    console.log("Raw response:", rawText);
+
+    const jsonStart = rawText.indexOf('{');
+    const jsonEnd = rawText.lastIndexOf('}');
+    if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
+      throw new Error("Could not find valid JSON in response");
     }
 
+    let jsonStr = rawText.substring(jsonStart, jsonEnd + 1);
+    console.log("Extracted JSON:", jsonStr);
 
-    // Ensure required fields exist
+    // Fix escaped quotes
+    jsonStr = jsonStr.replace(/\\"/g, '"');
+
+    const result = JSON.parse(jsonStr);
+
     const prediction = result.prediction || "UNKNOWN";
     const reason = result.reason || "No reason provided";
     const contributions = result.contributions || {};
-    
+
     output.innerHTML = `
       <div class="prediction-result">
         <h3 style="color: ${prediction === "ON" ? 'green' : 'red'}">
@@ -236,6 +241,7 @@ document.getElementById("checkWaterBtn").addEventListener("click", async () => {
         </h3>
         <p><strong>Reason:</strong> ${reason}</p>
         <div class="contributions">
+         <p><strong>Contributions</strong>
           ${Object.entries(contributions)
             .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
             .slice(0, 3)
